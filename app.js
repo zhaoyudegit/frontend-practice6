@@ -18,8 +18,8 @@ const loadData = async () => {
         $('#sub-title').text(data.title + ' · ' + data.source);
         $('#status').hide();
         renderCards(data);
-        renderBarChart(data);      // ✅开启柱状图
-        // renderLineChart(data);   // 折线依旧关闭
+        renderBarChart(data);
+        renderLineChart(data);
     } catch (err) {
         $('#status').text(`加载失败: ${err.message}`).show();
     }
@@ -41,7 +41,6 @@ const renderCards = (data) => {
     })
 };
 
-// 补全ECharts柱状图
 const renderBarChart = (data) => {
     if (!barChart) barChart = echarts.init(document.querySelector('#bar-chart'));
     const cityList = data.series.map(s=>s.city);
@@ -61,15 +60,52 @@ const renderBarChart = (data) => {
     })
 };
 
-// 折线图保持空壳占位，不报错
-const renderLineChart = (data) => {};
+// 修复后的折线图代码，锁定Y轴范围，解决拉伸溢出
+const renderLineChart = (data) => {
+    if(lineChart) lineChart.destroy();
+    const ctx = document.querySelector('#line-chart');
+    lineChart = new Chart(ctx,{
+        type:'line',
+        data:{
+            labels: data.months,
+            datasets: data.series.map(s=>({
+                label:s.city,
+                data:s.counts,
+                fill:false,
+                tension:0.2
+            }))
+        },
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            plugins:{
+                title:{
+                    display:true,
+                    text:"月度气温变化趋势，单位：℃"
+                }
+            },
+            scales:{
+                y:{
+                    min:-5,
+                    max:32,
+                    title:{
+                        display:true,
+                        text:"气温 ℃"
+                    }
+                }
+            }
+        }
+    })
+};
 
-// resize只处理barChart
 window.addEventListener('resize',()=>{
     if(barChart) barChart.resize();
 });
 
-// jQuery交互暂不启用
+// jQuery交互：点击卡片高亮
+$('#cards').on('click','.card',function(){
+    $(this).toggleClass('border-primary shadow');
+})
 
 loadData();
 

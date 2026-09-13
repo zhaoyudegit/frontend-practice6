@@ -22,7 +22,10 @@
             </div>
             <div class="col-lg-6">
                 <h4>月度气温变化趋势折线图</h4>
-                <canvas id="line-chart" style="height:360px;"></canvas>
+                <!-- 修复：外层div固定高度，解决canvas变形 -->
+                <div style="height:360px;">
+                    <canvas id="line-chart"></canvas>
+                </div>
             </div>
         </div>
     </div>
