@@ -1,9 +1,7 @@
 const state = { data: null };
-// 先声明变量，防止未定义报错
 let barChart = null;
 let lineChart = null;
 
-// 加载数据，三种状态：加载中、失败、空数据
 const loadData = async () => {
     $('#status').text('加载中，请稍候...').show();
     try {
@@ -20,14 +18,13 @@ const loadData = async () => {
         $('#sub-title').text(data.title + ' · ' + data.source);
         $('#status').hide();
         renderCards(data);
-        // renderBarChart(data);   // 暂不调用
-        // renderLineChart(data);  // 暂不调用
+        renderBarChart(data);      // ✅开启柱状图
+        // renderLineChart(data);   // 折线依旧关闭
     } catch (err) {
         $('#status').text(`加载失败: ${err.message}`).show();
     }
 };
 
-// 渲染统计卡片
 const renderCards = (data) => {
     $('#cards').empty();
     data.series.forEach(item => {
@@ -44,15 +41,35 @@ const renderCards = (data) => {
     })
 };
 
-// 柱状图函数：写好，但loadData里面不去调用，页面不会渲染图表
-const renderBarChart = (data) => {};
-// 折线图函数：写好空壳占位，避免引用报错
+// 补全ECharts柱状图
+const renderBarChart = (data) => {
+    if (!barChart) barChart = echarts.init(document.querySelector('#bar-chart'));
+    const cityList = data.series.map(s=>s.city);
+    const avgTempList = data.series.map(s=>{
+        return (s.counts.reduce((a,b)=>a+b,0)/s.counts.length).toFixed(1);
+    })
+    barChart.setOption({
+        title:{text:"各城市全年平均气温",left:"center"},
+        tooltip:{trigger:"axis"},
+        xAxis:{data:cityList},
+        yAxis:{type:"value", name:"℃"},
+        series:[{
+            type:"bar",
+            data:avgTempList,
+            name:"平均气温"
+        }]
+    })
+};
+
+// 折线图保持空壳占位，不报错
 const renderLineChart = (data) => {};
 
-// 空的resize占位
-window.addEventListener('resize',()=>{});
+// resize只处理barChart
+window.addEventListener('resize',()=>{
+    if(barChart) barChart.resize();
+});
 
 // jQuery交互暂不启用
-// $('#cards').on('click','.card',function(){});
 
 loadData();
+
